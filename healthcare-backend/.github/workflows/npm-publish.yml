@@ -1,0 +1,35 @@
+name: Deploy Node.js Backend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    environment: healthcare
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install dependencies
+        run: |
+          npm install
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          ANTHROPIC_API_KEY=${{ vars.ANTHROPIC_API_KEY }}
+          EMAIL_PASSWORD=${{ vars.EMAIL_PASSWORD }}
+          EMAIL_USER=${{ vars.EMAIL_USER }}
+          JWT_SECRET=${{ vars.JWT_SECRET }}
+          MONGODB_URI=${{ vars.MONGODB_URI }}
+          NODE_ENV=${{ vars.NODE_ENV }}
+          PORT=${{ vars.PORT }}
+          REDIS_HOST=${{ vars.REDIS_HOST }}
+          REDIS_PORT=${{ vars.REDIS_PORT }}
+          EOF
+      - name: Restart server (PM2)
+        run: |
+          export NVM_DIR="$HOME/.nvm"
+          source $NVM_DIR/nvm.sh
+          pm2 restart backend || pm2 start index.js --name backend
